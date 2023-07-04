@@ -1,4 +1,4 @@
-#![allow(clippy::never_loop)]
+// #![allow(clippy::never_loop)]
 use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 
@@ -13,17 +13,6 @@ pub struct Player {
     pub is_winner: bool,
 }
 
-//trait PlayerTrait {
-//fn move_player(&mut self);
-//    fn play(&mut self) -> Game;
-//}
-
-// fn play(players: Players) {
-//     for (_, player) in players.players.iter() {
-//         let pl = player.play();
-//     }
-// }
-
 impl Player {
     fn play(&mut self) {
         let mut current_score = 0;
@@ -31,16 +20,16 @@ impl Player {
         let rng = roll_dice();
         if rng == 6 {
             current_score += rng;
-            println!("{} rolled a 6 and gets to roll again", self.name);
+            println!("{} rolls a 6 and gets to roll again", self.name);
             std::thread::sleep(std::time::Duration::from_secs(1));
             let rng_sec = roll_dice();
             if rng_sec == 6 {
                 current_score += rng_sec;
-                println!("{} rolled a 6 again......", self.name);
+                println!("{} rolls a 6 again......", self.name);
                 std::thread::sleep(std::time::Duration::from_secs(1));
                 let rng_third = roll_dice();
                 if rng_third == 6 {
-                    println!("{} rolled a 6 thrice.....", self.name);
+                    println!("{} rolls a 6 thrice.....", self.name);
                     current_score = 0;
                     // break;
                 } else {
@@ -51,25 +40,6 @@ impl Player {
                 current_score += rng_sec;
                 // break;
             }
-            // loop {
-            //     let rng_sec = roll_dice();
-            //     if rng_sec == 6 {
-            //         current_score += rng_sec;
-            //         loop {
-            //             let rng_third = roll_dice();
-            //             if rng_third == 6 {
-            //                 current_score = 0;
-            //                 break;
-            //             } else {
-            //                 current_score += rng_third;
-            //                 break;
-            //             }
-            //         }
-            //     } else {
-            //         current_score += rng_sec;
-            //         break;
-            //     }
-            // }
         } else {
             current_score += rng;
             // break;
@@ -79,37 +49,27 @@ impl Player {
         match self.position {
             100 => {
                 self.is_winner = true;
+                println!(
+                    "{} rolled a {} and moves to {}.",
+                    self.name, current_score, self.position
+                );
                 println!("{} is the winner", self.name);
             }
             101..=u8::MAX => {
                 self.position -= current_score;
+                println!(
+                    "{} rolled a {} stays at {}.",
+                    self.name, current_score, self.position
+                );
             }
             _ => {
                 println!(
-                    "{} rolled a {} and moved to {}",
+                    "{} rolled a {} and moves to {}.",
                     self.name, current_score, self.position
                 );
                 std::thread::sleep(std::time::Duration::from_secs(1));
             }
         }
-
-        // if self.position > 100 {
-        //     self.position -= current_score;
-        // } else if self.position == 100 {
-        //     self.is_winner = true;
-        //     println!("{} is the winner", self.name);
-        // } else {
-        //     println!(
-        //         "{} rolled a {} and moved to {}",
-        //         self.name, current_score, self.position
-        //     );
-        //     std::thread::sleep(std::time::Duration::from_secs(1));
-        // }
-        // println!(
-        //     "{} rolled a {} and moved to {}",
-        //     self.name, current_score, self.position
-        // );
-        // std::thread::sleep(std::time::Duration::from_secs(1));
     }
 }
 
@@ -262,7 +222,6 @@ enum Game {
 struct SnakesAndLadders {
     players: Players,
     board: Board,
-    round: u8,
 }
 
 impl SnakesAndLadders {
@@ -274,19 +233,20 @@ impl SnakesAndLadders {
                 .add_snakes()
                 .add_ladder()
                 .build(),
-            round: 1,
         }
     }
 
     fn play_game(&mut self) -> Game {
         for (_, players) in self.players.players.iter_mut() {
             players.play();
-            println!("{}", self.round);
             for snake in self.board.snakes.iter() {
                 let (start, end) = snake;
                 if players.position == *start {
                     players.position = *end;
-                    println!("Snake bites Player {}! {} -> {}", players.name, start, end);
+                    println!(
+                        "Snake bites Player {} ..... {} -> {}",
+                        players.name, start, end
+                    );
                     std::thread::sleep(std::time::Duration::from_secs(1));
                 }
             }
@@ -295,7 +255,7 @@ impl SnakesAndLadders {
                 if players.position == *start {
                     players.position = *end;
                     println!(
-                        "Player {} climbs ladder! {} -> {}",
+                        "Player {} climbs ladder..... {} -> {}",
                         players.name, start, end
                     );
                     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -305,8 +265,6 @@ impl SnakesAndLadders {
                 return Game::End;
             }
         }
-
-        self.round += 1;
         Game::Play
     }
 }
@@ -331,9 +289,16 @@ fn game_loop() {
                     position: 0,
                     is_winner: false,
                 });
+                snakes_and_ladders.players.add_player(Player {
+                    name: "Player 3".to_string(),
+                    position: 0,
+                    is_winner: false,
+                });
                 game = Game::Play;
             }
             Game::Play => {
+                round += 1;
+                println!("                 ROUND{}", round);
                 game = snakes_and_ladders.play_game();
             }
             Game::End => {
